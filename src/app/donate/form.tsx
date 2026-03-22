@@ -1,12 +1,28 @@
 "use client";
 import { donateAction } from "./actions";
 import styles from "./form.module.scss";
+import { useEffect } from "react";
+import { useActionState } from "react";
+
+type ActionState = { redirectUrl?: string; error?: string } | null;
+
+function submitWithRedirect(_prevState: ActionState, data: FormData): Promise<NonNullable<ActionState>> {
+  return donateAction(data) as Promise<NonNullable<ActionState>>;
+}
 
 export function DonationForm() {
+  const [state, formAction] = useActionState(submitWithRedirect, null);
+
+  useEffect(() => {
+    if (state?.redirectUrl) {
+      window.location.href = state.redirectUrl;
+    }
+  }, [state]);
+
   return (
     <form
       className={styles.form}
-      action={donateAction}
+      action={formAction}
     >
       <div className={styles.field}>
         <div className={styles.label}>Nombre</div>
