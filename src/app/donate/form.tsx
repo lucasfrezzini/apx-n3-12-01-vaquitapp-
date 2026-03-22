@@ -30,9 +30,11 @@ export function DonationForm() {
         <div className={styles.label}>Monto</div>
         <input
           className={styles.textField}
-          type="text"
+          type="number"
           name="amount"
           placeholder="10000"
+          min="1"
+          step="1"
         />
       </div>
 

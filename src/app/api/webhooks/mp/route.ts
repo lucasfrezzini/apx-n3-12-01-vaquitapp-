@@ -1,5 +1,8 @@
 import { getPaymentById, WebhokPayload } from "@/lib/mercadopago";
 import { confirmPurchase } from "@/lib/purchases";
+import PostgreAPI from "@/lib/db/PostgreAPI";
+
+const db = new PostgreAPI();
 
 export async function POST(request: Request, { params }) {
   const body: WebhokPayload = await request.json();
@@ -11,11 +14,15 @@ export async function POST(request: Request, { params }) {
       console.log(`Payment ${mpPayment.id} approved`);
       const purchaseId = mpPayment.external_reference;
 
+      const purchase = await db.getPurchaseById(purchaseId);
+      if (purchase && purchase.dataValues.state === "confirmed") {
+        console.log(`Purchase ${purchaseId} already confirmed, skipping`);
+        return Response.json({ received: true });
+      }
+
       await confirmPurchase(purchaseId);
     }
   }
 
-  // Se le responde a MP siempre (si o si) para que no vuelva a llamar a este endpoint
-  // con el mismo pago, aunque puede suceder
   return Response.json({ received: true });
 }
