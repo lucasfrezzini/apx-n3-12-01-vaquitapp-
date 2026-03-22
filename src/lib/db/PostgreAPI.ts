@@ -1,5 +1,5 @@
-import { Purchase } from "./index";
-import { sequelize } from "./sequelize";
+import { getPurchaseModel } from "./index";
+import { getSequelize } from "./sequelize";
 
 class PostgreAPI {
   private initialized = false;
@@ -8,7 +8,7 @@ class PostgreAPI {
     if (!this.initialized) {
       this.initialized = true;
       try {
-        await sequelize.authenticate();
+        await getSequelize().authenticate();
         console.log("Database connection established");
       } catch (e) {
         console.error("Unable to connect to the database:", e);
@@ -16,36 +16,40 @@ class PostgreAPI {
     }
   }
 
+  private get Purchase() {
+    return getPurchaseModel();
+  }
+
   async createPurchase(data) {
     await this.ensureConnection();
-    return await Purchase.create(data);
+    return await this.Purchase.create(data);
   }
 
   async updatePurchase(id, updateData) {
     await this.ensureConnection();
-    const purchase = await Purchase.findByPk(id);
+    const purchase = await this.Purchase.findByPk(id);
     if (!purchase) throw new Error("Purchase not found");
     return await purchase.update(updateData);
   }
 
   async getPurchases() {
     await this.ensureConnection();
-    return await Purchase.findAll();
+    return await this.Purchase.findAll();
   }
 
   async getPurchasesApproved(): Promise<any[]> {
     await this.ensureConnection();
-    return await Purchase.findAll({ where: { state: "confirmed" } });
+    return await this.Purchase.findAll({ where: { state: "confirmed" } });
   }
 
   async getPurchaseById(id) {
     await this.ensureConnection();
-    return await Purchase.findByPk(id);
+    return await this.Purchase.findByPk(id);
   }
 
   async sync() {
     await this.ensureConnection();
-    await sequelize.sync({ alter: true });
+    await getSequelize().sync({ alter: true });
   }
 }
 
